@@ -11608,7 +11608,6 @@ function EventManager(options) { // assumed to be a calendar
 		}
 
 		peerEvents = t.getPeerEvents(span, event);
-
 		for (i = 0; i < peerEvents.length; i++)  {
 			peerEvent = peerEvents[i];
 
@@ -11616,7 +11615,6 @@ function EventManager(options) { // assumed to be a calendar
 			if (eventIntersectsRange(peerEvent, span, isExpandThrough)) {
 				// evaluate overlap for the given range and short-circuit if necessary
 				if (overlap === false) {
-					console.log('1');
 					return false;
 				}
 				// if the event's overlap is a test function, pass the peer event in question as the first param
@@ -11627,7 +11625,6 @@ function EventManager(options) { // assumed to be a calendar
 				// if we are computing if the given range is allowable for an event, consider the other event's
 				// EventObject-specific or Source-specific `overlap` property
 				if (event) {
-					console.log(event);
 					peerOverlap = firstDefined(
 						peerEvent.overlap,
 						(peerEvent.source || {}).overlap
@@ -11697,6 +11694,9 @@ function EventManager(options) { // assumed to be a calendar
 			var eventStartSecond = eventStart.get('hour')*3600 + eventStart.get('minute')*60 + eventStart.get('second');
 			var eventEndSecond = eventEnd.get('hour')*3600 + eventEnd.get('minute')*60 + eventEnd.get('second');
 
+			if(eventEnd <= rangeStart || eventStart >= rangeEnd) {
+				return false;
+			}
 			if(eventDay < rangeStartDay || eventDay > rangeEndDay) {
 				ret = false;
 			}
