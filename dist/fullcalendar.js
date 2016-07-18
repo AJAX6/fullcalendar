@@ -10959,14 +10959,12 @@ function EventManager(options) { // assumed to be a calendar
 	
 	// returns the expanded events that were created
 	function renderEvent(eventInput, stick) {
-		var view = this.view;
-		var isExpandThrough = view.opt('expandThrough');
-		var abstractEvent = buildEventFromInput(eventInput, false, isExpandThrough);
+		var abstractEvent = buildEventFromInput(eventInput, false);
 		var events;
 		var i, event;
 
 		if (abstractEvent) { // not false (a valid input)
-			events = expandEvent(abstractEvent, false, false, isExpandThrough);
+			events = expandEvent(abstractEvent, false, false);
 
 			for (i = 0; i < events.length; i++) {
 				event = events[i];
@@ -11042,7 +11040,7 @@ function EventManager(options) { // assumed to be a calendar
 	// An "abstract" event is an event that, if recurring, will not have been expanded yet.
 	// Will return `false` when input is invalid.
 	// `source` is optional
-	function buildEventFromInput(input, source, isExpandThrough = true) {
+	function buildEventFromInput(input, source) {
 		var out = {};
 		var start, end;
 		var allDay;
@@ -11063,7 +11061,7 @@ function EventManager(options) { // assumed to be a calendar
 		}
 
 		out._id = input._id || (input.id === undefined ? '_fc' + eventGUID : input.id + '');
-		if(isExpandThrough)
+		if(options.expandThrough)
 			eventGUID++;
 		
 		if (input.className) {
@@ -11190,7 +11188,7 @@ function EventManager(options) { // assumed to be a calendar
 	// If not a recurring event, return an array with the single original event.
 	// If given a falsy input (probably because of a failed buildEventFromInput call), returns an empty array.
 	// HACK: can override the recurring window by providing custom rangeStart/rangeEnd (for businessHours).
-	function expandEvent(abstractEvent, _rangeStart, _rangeEnd, isExpandThrough = true) {
+	function expandEvent(abstractEvent, _rangeStart, _rangeEnd) {
 		var events = [];
 		var dowHash;
 		var dow;
@@ -11244,7 +11242,7 @@ function EventManager(options) { // assumed to be a calendar
 					date.add(1, 'days');
 				}
 			}
-			else if(isExpandThrough === false) {
+			else if(options.expandThrough === false) {
 
 				date = abstractEvent.start; // holds the date of the current day
 				while (date.isBefore(abstractEvent.end)) {
@@ -11571,16 +11569,14 @@ function EventManager(options) { // assumed to be a calendar
 
 	// Determines the given span (unzoned start/end with other misc data) can be selected.
 	function isSelectionSpanAllowed(span) {
-		var view = this.view;
-		var isExpandThrough = view.opt('expandThrough');
-		return isSpanAllowed(span, options.selectConstraint, options.selectOverlap, false, isExpandThrough);
+		return isSpanAllowed(span, options.selectConstraint, options.selectOverlap, false, options.expandThrough);
 	}
 
 
 	// Returns true if the given span (caused by an event drop/resize or a selection) is allowed to exist
 	// according to the constraint/overlap settings.
 	// `event` is not required if checking a selection.
-	function isSpanAllowed(span, constraint, overlap, event, isExpandThrough = true) {
+	function isSpanAllowed(span, constraint, overlap, event) {
 		var constraintEvents;
 		var anyContainment;
 		var peerEvents;
@@ -11612,7 +11608,7 @@ function EventManager(options) { // assumed to be a calendar
 			peerEvent = peerEvents[i];
 
 			// there needs to be an actual intersection before disallowing anything
-			if (eventIntersectsRange(peerEvent, span, isExpandThrough)) {
+			if (eventIntersectsRange(peerEvent, span)) {
 				// evaluate overlap for the given range and short-circuit if necessary
 				if (overlap === false) {
 					return false;
@@ -11675,11 +11671,11 @@ function EventManager(options) { // assumed to be a calendar
 
 	// Does the event's date range intersect with the given range?
 	// start/end already assumed to have stripped zones :(
-	function eventIntersectsRange(event, range, isExpandThrough = true) {
+	function eventIntersectsRange(event, range) {
 		var eventStart = event.start.clone().stripZone();
 		var eventEnd = t.getEventEnd(event).stripZone();
 
-		if(isExpandThrough === true) {
+		if(options.expandThrough === true) {
 			return range.start < eventEnd && range.end > eventStart;
 		}
 		else {
