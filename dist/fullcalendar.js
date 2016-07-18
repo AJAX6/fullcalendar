@@ -4889,7 +4889,13 @@ Grid.mixin({
 				return this.view.formatRange(range, formatStr);
 			}
 			else {
-				return range.start.format(formatStr);
+				var view = this.view;
+				var isDisplaySlotDuration = view.opt('displaySlotDuration');
+
+				if(isDisplaySlotDuration)
+					return this.view.formatRange(range, formatStr);
+				else
+					return range.start.format(formatStr);
 			}
 		}
 
@@ -6819,12 +6825,31 @@ var TimeGrid = FC.TimeGrid = Grid.extend(DayTableMixin, {
 		var isLabeled;
 		var axisHtml;
 
+		var view = this.view;
+		var isDisplaySlotDuration = view.opt('displaySlotDuration');
+
 		// Calculate the time for each slot
 		while (slotTime < this.maxTime) {
 			slotDate = this.start.clone().time(slotTime);
 			isLabeled = isInt(divideDurationByDuration(slotTime, this.labelInterval));
 
-			axisHtml =
+
+			if(isDisplaySlotDuration) {
+				var nextSlotDate = slotDate.clone().add(1, 'h');
+
+				axisHtml =
+				'<td class="fc-axis fc-time ' + view.widgetContentClass + '" ' + view.axisStyleAttr() + '>' +
+					(isLabeled ?
+						'<span>' + // for matchCellWidths
+							htmlEscape(slotDate.format(this.labelFormat)) + ' - ' +
+							htmlEscape(nextSlotDate.format(this.labelFormat)) +
+						'</span>' :
+						''
+						) +
+				'</td>';
+			}
+			else {
+				axisHtml =
 				'<td class="fc-axis fc-time ' + view.widgetContentClass + '" ' + view.axisStyleAttr() + '>' +
 					(isLabeled ?
 						'<span>' + // for matchCellWidths
@@ -6833,6 +6858,7 @@ var TimeGrid = FC.TimeGrid = Grid.extend(DayTableMixin, {
 						''
 						) +
 				'</td>';
+			}
 
 			html +=
 				'<tr data-time="' + slotDate.format('HH:mm:ss') + '"' +
