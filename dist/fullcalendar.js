@@ -1711,13 +1711,13 @@ function formatRangeWithChunks(date1, date2, chunks, separator, isRTL) {
 		middleStr1 += formatDateWithChunk(date1, chunks[middleI]);
 		middleStr2 += formatDateWithChunk(date2, chunks[middleI]);
 	}
-
+	
 	if (middleStr1 || middleStr2) {
 		if (isRTL) {
-			middleStr = middleStr2 + separator + middleStr1;
+			middleStr = middleStr2 + rightStr + separator + middleStr1; //deepsky hack added one more unit
 		}
 		else {
-			middleStr = middleStr1 + separator + middleStr2;
+			middleStr = middleStr1 + rightStr + separator + middleStr2; //deepsky hack
 		}
 	}
 
@@ -4890,10 +4890,11 @@ Grid.mixin({
 			}
 			else {
 				var view = this.view;
-				var isDisplaySlotDuration = view.opt('displaySlotDuration');
+				var isDisplaySlotDuration = view.opt('displaySlotDuration'); //deepsky hack
 
-				if(isDisplaySlotDuration)
+				if(isDisplaySlotDuration) {
 					return this.view.formatRange(range, formatStr);
+				}
 				else
 					return range.start.format(formatStr);
 			}
