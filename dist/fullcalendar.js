@@ -638,7 +638,6 @@ function intersectRanges(subjectRange, constraintRange, isExpandThrough = true) 
 	var constraintEnd = constraintRange.end;
 	var segStart, segEnd;
 	var isStart, isEnd;
-
 	if (subjectEnd > constraintStart && subjectStart < constraintEnd) { // in bounds at all?
 
 		if (subjectStart >= constraintStart) {
@@ -3688,6 +3687,7 @@ var Grid = FC.Grid = Class.extend(ListenerMixin, MouseIgnorerMixin, {
 				view.unselect(); // since we could be rendering a new selection, we want to clear any old one
 			},
 			hitOver: function(hit, isOrig, origHit) {
+
 				if (origHit) { // click needs to have started on a hit
 
 					// if user dragged to another cell at any point, it can no longer be a dayClick
@@ -7029,6 +7029,7 @@ var TimeGrid = FC.TimeGrid = Grid.extend(DayTableMixin, {
 
 	// Slices up the given span (unzoned start/end with other misc data) into an array of segments
 	spanToSegs: function(span) {
+
 		var segs = this.sliceRangeByTimes(span);
 		var i;
 
@@ -10729,11 +10730,12 @@ function EventManager(options) { // assumed to be a calendar
 						if (abstractEvent) { // not false (an invalid event)
 							cache.push.apply(
 								cache,
-								expandEvent(abstractEvent) // add individual expanded events to the cache
+								expandEvent(abstractEvent, undefined, undefined, true) // add individual expanded events to the cache
 							);
 						}
 					}
 				}
+
 
 				pendingSourceCnt--;
 				if (!pendingSourceCnt) {
@@ -11215,7 +11217,7 @@ function EventManager(options) { // assumed to be a calendar
 	// If not a recurring event, return an array with the single original event.
 	// If given a falsy input (probably because of a failed buildEventFromInput call), returns an empty array.
 	// HACK: can override the recurring window by providing custom rangeStart/rangeEnd (for businessHours).
-	function expandEvent(abstractEvent, _rangeStart, _rangeEnd) {
+	function expandEvent(abstractEvent, _rangeStart, _rangeEnd, isFetch = false) {
 		var events = [];
 		var dowHash;
 		var dow;
@@ -11270,11 +11272,15 @@ function EventManager(options) { // assumed to be a calendar
 				}
 			}
 			else if(options.expandThrough === false) {
+				
+				date = abstractEvent.start.clone(); // holds the date of the current day
 
-				date = abstractEvent.start; // holds the date of the current day
-				while (date.isBefore(abstractEvent.end)) {
+				if(isFetch) {
+					events.push(abstractEvent); // return the original event. will be a one-item array
+					return events;
+				}
 
-
+				do {
 					startTime = abstractEvent.start; 
 					endTime = abstractEvent.end;
 					start = date.clone();
@@ -11295,11 +11301,11 @@ function EventManager(options) { // assumed to be a calendar
 							!startTime && !endTime, // allDay?
 							event
 							);
+
 					events.push(event);
 
 					date.add(1, 'days');
-				}
-
+				} while (date.isBefore(abstractEvent.end));
 			}
 			else {
 				events.push(abstractEvent); // return the original event. will be a one-item array
